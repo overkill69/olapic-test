@@ -97,7 +97,6 @@ abstract class AbstractService extends BaseAbstractService implements ServiceInt
         foreach ($parameters as $key => $val) {
             $url->addToQuery($key, $val);
         }
-
         return $url;
     }
 

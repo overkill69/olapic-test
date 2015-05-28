@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Description of InstaController
  *
@@ -12,35 +11,48 @@ use OAuth\OAuth2\Service\Instagram;
 use OAuth\Common\Storage\Session;
 use OAuth\Common\Consumer\Credentials;
 
-class InstaController {   
+class InstaController implements \OAuth{   
 
     protected $_storage;
     private $_credentials;
-    private $_mediId;
+    private $_mediaId;
     protected $scopes = array('basic', 'comments', 'relationships', 'likes');
+    protected $serviceFactory;
+    protected $uriFactory;
     private $_currentUri;
+    private $_instagramService;
 
     // Instantiate the Instagram service using the credentials, http client and storage mechanism for the token
     // instagram endpoint https://api.instagram.com/v1/media/{media-id}?access_token=ACCESS-TOKEN
     /**  */
-    public function __construct($param) {
-        $this->_storage = new Session();
+    public function __construct() {
+        echo 'FUCK YEAH!!!';
+        die();
+        $this->serviceFactory = new \OAuth\ServiceFactory();
+        $this->uriFactory = new \OAuth\Common\Http\Uri\UriFactory();
+        $this->_currentUri = $uriFactory->createFromSuperGlobalArray($_SERVER);
+        $this->_currentUri->setQuery('');
+        $this->_storage = new Session();        
         $this->_credentials = new Credentials(
-            $param['instagram']['key'],
-            $param['instagram']['secret'],
+            $param['key'],
+            $param['secret'],
             $this->_currentUri->getAbsoluteUri()
         );
-        $instagramService = $serviceFactory->createService('instagram', $credentials, $storage, $scopes);
+        $this->_instagramService = $this->serviceFactory->createService('instagram', $this->_credentials, $this->_storage, $this->scopes);
+        $this->_instagramService->requestAccessToken($_GET['code']);
+        $result = json_decode($this->_instagramService->request('users/self'), true);
+        var_dump($result);
+        return TRUE;
+    }
+    
+    public function getData($param) {
+        
+        
         
         if (!empty($_GET['code'])) {
-            // This was a callback request from Instagram, get the token
             $instagramService->requestAccessToken($_GET['code']);
-
-            // Send a request with it
-            $result = json_decode($instagramService->request('media/'.$mediaId), true);
-
-            // Show some of the resultant data
-            echo 'Your unique instagram user id is: ' . $result['data']['id'] . ' and your name is ' . $result['data']['full_name'];
+            $result = json_decode($instagramService->request('users/self'), true);
+            var_dump($result);
 
         } elseif (!empty($_GET['go']) && $_GET['go'] === 'go') {
             $url = $instagramService->getAuthorizationUri();
