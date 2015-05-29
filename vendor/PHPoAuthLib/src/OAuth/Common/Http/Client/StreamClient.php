@@ -59,9 +59,8 @@ class StreamClient extends AbstractClient
 
         $context = $this->generateStreamContext($requestBody, $extraHeaders, $method);
 
-        $level = error_reporting(0);
-        $response = file_get_contents($endpoint->getAbsoluteUri(), false, $context);
-        echo '<pre>'; var_dump($context); echo '</pre>';
+        $level = error_reporting(0);        
+        $response = file_get_contents($endpoint->getAbsoluteUri(), false, $context);        
         error_reporting($level);
         if (false === $response) {
             $lastError = error_get_last();

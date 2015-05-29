@@ -116,13 +116,17 @@ abstract class AbstractService extends BaseAbstractService implements ServiceInt
             'redirect_uri'  => $this->credentials->getCallbackUrl(),
             'grant_type'    => 'authorization_code',
         );
-
+/*echo '<pre>';
+var_dump($this->getAccessTokenEndpoint());
+var_dump($bodyParams);
+var_dump($this->getExtraOAuthHeaders());
+echo '</pre>';*/
         $responseBody = $this->httpClient->retrieveResponse(
             $this->getAccessTokenEndpoint(),
             $bodyParams,
             $this->getExtraOAuthHeaders()
         );
-
+        
         $token = $this->parseAccessTokenResponse($responseBody);
         $this->storage->storeAccessToken($this->service(), $token);
 

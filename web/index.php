@@ -12,6 +12,7 @@ use OAuth\Common\Consumer\Credentials;
 $app = new Silex\Application();
 $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app['debug'] = true;
+$_SESSION['EndUri'] = '';
 /* DB test for Silex fw
  * $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
     'db.options' => array(
@@ -35,7 +36,8 @@ $app->get('/media/{id}', function (Silex\Application $app, $id) use ($app) {
     echo $output;
     return $app->json($om);//$output;
 });*/
-$app['instagram'] = $app->share(function() {
+$app['instagram'] = $app->share(function($endpointUri) {
+    
     $params["key"] = 'af167bb07528423b9e0801b205db4dd0';
     $params["secret"] = '124dfae2b2724d3aa9b71497a4a3a6fb';             
     $scopes = array('basic', 'comments', 'relationships', 'likes'); 
@@ -54,30 +56,33 @@ $app['instagram'] = $app->share(function() {
     );
     
     $instagramService = $serviceFactory->createService('instagram', $credentials, $storage, $scopes);
-    
+    /*
     $instagramService->requestAccessToken('d6792fd384544dbd8e543c09dee4e0f9');
     //die();
     $result = json_decode($instagramService->request('users/self'), true);
     /*$url = $instagramService->getAuthorizationUri();
     header('Location: ' . $url);*/
-    var_dump($result);
-    /*if (!empty($_GET['code'])) {
+    //var_dump($result);
+    /**/if (!empty($_GET['code'])) {
         // This was a callback request from Instagram, get the token
         $instagramService->requestAccessToken($_GET['code']);
 
         // Send a request with it
-        $result = json_decode($instagramService->request('users/self'), true);
-
+        $result = json_decode($instagramService->request($_SESSION['EndUri']), true);
+        var_dump($result);
         // Show some of the resultant data
-        echo 'Your unique instagram user id is: ' . $result['data']['id'] . ' and your name is ' . $result['data']['full_name'];
+        //echo 'Your unique instagram user id is: ' . $result['data']['id'] . ' and your name is ' . $result['data']['full_name'];
 
     } elseif (!empty($_GET['go']) && $_GET['go'] === 'go') {
         $url = $instagramService->getAuthorizationUri();
-         echo $url;
-         $app->redirect( $url);
-       
+        //echo $url;        
+        header('Location:'. $url);
+        echo "<a href='$url'> GO !!! </a>";
+        $code = file_get_contents($url, false, NULL);
+        var_dump($code);
     } else {
         $url = $currentUri->getRelativeUri() . '?go=go';
+        header('Location:'. $url);
         echo "<a href='$url'>Login with Instagram!</a>";
     }/**/
     return TRUE;
@@ -96,6 +101,26 @@ function generate_sig($endpoint, $params, $secret) {
 
 $app->get('/media/{id}',function($id) use ($app){    
     //$params["media"] = $id;    
+    /*for SIG
+     * 
+     * 
+     *
+     * $params = array(
+     *   'access_token' => 'fc555cf71c3749a189851696b9e91140',
+     *   'count' => 10,
+     * );
+     * $secret = '124dfae2b2724d3aa9b71497a4a3a6fb';
+     * 
+     * $sig = generate_sig($endpoint, $params, $secret);
+     * echo $sig;
+     */
+    $_SESSION['EndUri'] = '/media/'.$id;
+    $inst = $app['instagram'];
+    var_dump($inst);
+    return FALSE;
+});
+/*$app->get('/media/{id}/{go}',function($id, $go) use ($app){    
+    //$params["media"] = $id;    
     $endpoint = '/media/'.$id;
     $params = array(
       'access_token' => 'fc555cf71c3749a189851696b9e91140',
@@ -108,5 +133,5 @@ $app->get('/media/{id}',function($id) use ($app){
     $inst = $app['instagram'];
     //var_dump($inst);
 });
-
+*/
 $app->run();
